@@ -22,25 +22,37 @@ import {
   
     useEffect(() => {
       const fetchrecipes = async () => {
-        
-        };
+        const storedRecipes = await AsyncStorage.getItem("customrecipes");
+        if (storedRecipes) {
+          setrecipes(JSON.parse(storedRecipes));
+        }
+        setLoading(false); // Loading is complete
+      };
   
       fetchrecipes();
     }, []);
   
     const handleAddrecipe = () => {
-
+      navigation.navigate("RecipesFormScreen");
     };
   
     const handlerecipeClick = (recipe) => {
-
+      navigation.navigate("CustomRecipesScreen", { recipe });
     };
+
     const deleterecipe = async (index) => {
-    
+      try {
+        const updatedRecipes = [...recipes];
+        updatedRecipes.splice(index, 1); // Remove article from array
+        await AsyncStorage.setItem("customrecipes", JSON.stringify(updatedRecipes)); // Update AsyncStorage
+        setrecipes(updatedRecipes); // Update state
+      } catch (error) {
+        console.error("Error deleting the recipe:", error);
+      }
     };
   
     const editrecipe = (recipe, index) => {
-
+      navigation.navigate("RecipesFormScreen", { recipeToEdit: recipe, recipeIndex: index });
     };
   
     return (
@@ -64,16 +76,42 @@ import {
               recipes.map((recipe, index) => (
                 <View key={index} style={styles.recipeCard} testID="recipeCard">
                   <TouchableOpacity testID="handlerecipeBtn" onPress={() => handlerecipeClick(recipe)}>
-                  
-                    <Text style={styles.recipeTitle}>{recipe.title}</Text>
+                     {/*//recipe.recipeImage  recipe.cookingDescription */}
+                    {recipe.recipeImage && (
+                       <Image
+                        source={{ uri: recipe.recipeImage }}
+                        style={styles.recipeImage}
+                      />
+                    )}
+                    <Text style={styles.recipeTitle}>{recipe.recipeName}</Text>
+                    <Text style={styles.sectionTitle}>Ingredients</Text>
+                    <View style={styles.ingredientsList} testID="ingredientsList">
+                        <View style={styles.ingredientItem}>
+                          <View style={styles.ingredientBullet} />
+                          <Text style={styles.ingredientText}>
+                            {recipe.ingredientName} {recipe.measure}
+                          </Text>
+                        </View>
+                    </View>
                     <Text style={styles.recipeDescription} testID="recipeDescp">
-                  
+                      {recipe.cookingDescription?.substring(0, 50) + "..."}
                     </Text>
                   </TouchableOpacity>
   
                   {/* Edit and Delete Buttons */}
                   <View style={styles.actionButtonsContainer} testID="editDeleteButtons">
-                    
+                    <TouchableOpacity
+                      onPress={() => editrecipe(recipe, index)}
+                      style={styles.editButton} 
+                    >
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => deleterecipe(index)}
+                      style={styles.deleteButton}
+                    >
+                      <Text style={styles.deleteButtonText}>Delete</Text>
+                    </TouchableOpacity>  
                 
                   </View>
                 </View>
@@ -129,7 +167,7 @@ import {
     },
     recipeCard: {
       width: 400, // Make recipe card width more compact
-      height: 300, // Adjust the height of the card to fit content
+      height: 500, // Adjust the height of the card to fit content
       backgroundColor: "#fff",
       padding: wp(3),
       borderRadius: 8,
@@ -185,6 +223,36 @@ import {
       color: "#fff",
       fontWeight: "600",
       fontSize: hp(1.8),
+    },
+    sectionTitle: {
+      fontSize: hp(1.3),
+      fontWeight: "bold",
+      color: "#4B5563", // text-neutral-700
+    },
+    ingredientsList: {
+      marginTop: wp(2),
+      marginLeft: wp(4),
+    },
+    ingredientItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: hp(2),
+      padding: 10,
+      backgroundColor: "#FFF9E1",
+      borderRadius: 8,
+      elevation: 2,
+    },
+    ingredientBullet: {
+      backgroundColor: "#FFD700",
+      borderRadius: 50,
+      height: hp(.75),
+      width: hp(.75),
+      marginRight: wp(2),
+    },
+    ingredientText: {
+      fontSize: hp(1.9),
+      color: "#333",
+      fontFamily: "Lato",
     },
   });
   
